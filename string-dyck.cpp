@@ -18,62 +18,62 @@
 #include <iostream>
 
 /**
- * @brief Given a Dyck word w produces the succeding Dyck word of the same size
- *        which is greater than w, if it exists or an empty string otherwise.
+ * @brief Given a Dyck word w produces the next Dyck word of the same size, if
+ *        it exists or an empty string otherwise.
  * 
  * @pre   w must be a Dyck word.
  * 
- * @param [in/out] w   On entry, the input Dyck word.
- *                     On exit the succeding Dyck word, if it exists or empty,
- *                     otherwise.
- * @param one          The char that appears more often in prefix substrings.
- * @param zero         The chat that appears less often in prefix substrings.
+ * @param [in/out] w On entry, the input Dyck word.
+ *                   On exit the succeding Dyck word, if it exists or empty
+ *                   otherwise.
+ * @param [in] c1    The character that appears more often in each prefix.
+ * @param [in] c0    The character that appears less often in each prefix.
  */
-void next_dyck_word(std::string& w, char one, char zero) {
+void next_dyck_word(std::string& w, char const c1, char const c0) {
   
-  unsigned m = w.size() - 1;
-
-  unsigned y = 0;
-  unsigned x = 0;
+  unsigned const m = w.size() - 1;
+  unsigned       y = 0;
+  unsigned       x = 0;
 
   for (unsigned i = m; i > 0; --i) {
 
-    if (w[i] == zero)
-      ++y; // counter for trailing zeros.
+    if (w[i] == c0)
+      ++y; // Counter for trailing zeros.
 
-    else if (w[i - 1] == zero) {
+    else if (w[i - 1] == c0) {
       
-      // Found greatest i such that w[i] = zero and w[i + 1] = one.
+      // Found greatest i such that w[i] = c0 and w[i + 1] = c1.
       
       // Change these two chars.
-      w[i - 1] = one;
-      w[  i  ] = zero;
+      w[i - 1] = c1;
+      w[  i  ] = c0;
       
-      // Overwrite the following next y - x chars to zero.
+      // Overwrite the following next y - x chars to c0.
       for (y = y - x; y != 0; --y)
-        w[++i] = zero;
+        w[++i] = c0;
       
       // Overwrite the remaining chars with alternating ones and zeros.
       while (i < m) {
-        w[++i] = one;
-        w[++i] = zero;
+        w[++i] = c1;
+        w[++i] = c0;
       }
       return;
     }
 
     else
-      ++x; // counter for ones that precede the trailing zeros.
+      ++x; // Counter for ones that precede the trailing zeros.
   }
   w.clear(); // Failed to produce a Dyck word, then clear w.
 }
 
 int main() {
   
-  unsigned n = 7;
+  unsigned n = 4;
   
   std::string w;
   while(n-- != 0)
     w += "()";
+  
   while (!w.empty()) {
     std::cout << w << '\n';
     next_dyck_word(w, '(', ')');

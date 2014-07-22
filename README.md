@@ -5,12 +5,11 @@ Let `integer` be any C/C++ unsigned integer type up to 64-bits long.
 Given a Dyck word the following code returns the next Dyck word of the same size, provided it exists.
 ```C++
 integer next_dyck_word(integer w) {
-  integer a = w & -w;
-  integer b = w + a;
-  integer c = w ^ b;
-  c = (c / a >> 2) + 1;
-  c = c * c - 1;
-  c = (c & 12297829382473034410u) | b;
+  integer const a = w & -w;
+  integer const b = w + a;
+  integer       c = w ^ b;
+                c = (c / a >> 2) + 1;
+                c = ((c * c - 1) & 12297829382473034410u) | b;
   return c;
 }
 ```
