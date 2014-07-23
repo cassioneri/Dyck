@@ -9,7 +9,7 @@ integer next_dyck_word(integer w) {
   integer const b = w + a;
   integer       c = w ^ b;
                 c = (c / a >> 2) + 1;
-                c = ((c * c - 1) & 12297829382473034410u) | b;
+                c = ((c * c - 1) & 0xaaaaaaaaaaaaaaaa) | b;
   return c;
 }
 ```
