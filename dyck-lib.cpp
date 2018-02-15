@@ -9,11 +9,6 @@
  For a discussion about this code and latest version:
  http://github.com/cassioneri/Dyck
 
- Compile with:
- g++ -O3 -std=c++11 -Wall -Wextra -pedantic -o dyck dyck-lib.cpp dyck.cpp
- or
- g++ -O3 -std=c++98 -Wall -Wextra -pedantic -o dyck dyck-lib.cpp dyck.cpp
- 
 *******************************************************************************/
 
 #include "dyck.h"
@@ -21,7 +16,7 @@
 namespace dyck {
 
 void print(integer const w, unsigned const n, char const one, char const zero) {
-  integer mask = static_cast<integer>(1) << (2 * n - 1);
+  integer mask = n == 0 ? 1 : static_cast<integer>(1) << (n - 1);
   do
     putchar(w & mask ? one : zero);
   while (mask >>= 1);

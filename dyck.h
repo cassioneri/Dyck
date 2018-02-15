@@ -11,7 +11,6 @@
  
 *******************************************************************************/
 
-#include <cassert>
 #include <climits>
 #include <cstdio>
 #include <string>
@@ -21,69 +20,112 @@ namespace dyck {
 #if __cplusplus >= 201103L
 
   typedef unsigned long long integer;
+  
+  #define DYCK_POPCOUNT_FUNCTION __builtin_popcountll
+  #define DYCK_CTZ_FUNCTION      __builtin_ctzll
 
 #else
   
   typedef unsigned long integer;
 
-  // Fake C++11 features
-  #define static_assert(c, m) typedef char static_assert_cpp_98[c && m]
-  #define nullptr             0
-  #define noexcept            throw()
+  #define DYCK_POPCOUNT_FUNCTION __builtin_popcountl
+  #define DYCK_CTZ_FUNCTION      __builtin_ctzl
+
+  // Fake C++11 features for C++98 compilers.
+  #define nullptr   0
+  #define noexcept  throw()
   #define constexpr
   
 #endif
-  
-#if __cplusplus >= 201402L
-  #define CONSTEXPR14 constexpr
-#else
-  #define CONSTEXPR14
-#endif
  
 /**
- * @brief Print a given 2n-bits word replacing 1 and 0 by c1 and c0, resp.
+ * @brief Print a given n-bits number in binary replacing 1 and 0 by c1 and c0,
+ *        respectively.
  * 
- * @param [in] w    The word.
- * @param [in] n    Half size.
- * @param [in] one  The character to be printed for each bit one.
- * @param [in] zero The character to be printed for each bit zero.
+ * @pre   w <= 2^n - 1.
+ * 
+ * @param [in] w  The number to be printed.
+ * @param [in] n  The number of bits.
+ * @param [in] c1 The character to be printed for each 1-bit.
+ * @param [in] c0 The character to be printed for each 0-bit.
  */
-void print(integer const w, unsigned const n, char const c1, char const c0);
-
-static unsigned const max_size = sizeof(integer) * CHAR_BIT;
-
-static_assert(max_size <= 64, "type 'integer' is too big!");
-
-// 0xaaaaaaaaaaaaaaaa is the minimum 64-bits Dyck word.
-static integer const minimum_of_max_size = 0xaaaaaaaaaaaaaaaa;
+void print(integer w, unsigned n, char c1, char const c0);
 
 /**
- * @brief Get the maximum 2n-bits Dyck word, that is, (pow(2, n) - 1) * pow(2, n).
- * 
- * @pre   2n <= max_size.
- * 
- * @param [in] n Half size.
- * 
- * @return The maximum 2n-bits Dyck word.
+ * Maximum allowed half size for a Dyck word.
  */
-CONSTEXPR14 inline integer maximum(unsigned n) noexcept {
-  assert(2 * n <= max_size && "n is too big!");
+static unsigned constexpr max_half_size = sizeof(integer) * CHAR_BIT >> 1;
+
+/**
+ * @brief Get the minimum 2n-long Dyck word if n > 0 or zero if n = 0.
+ * 
+ * For backward compatibility with C++98, this is template meta-programming
+ * function rather than a constexpr function.
+ * 
+ * @pre   n <= max_half_size.
+ * 
+ * @tparam n Zero or half size of the Dyck word.
+ * 
+ * @retval value  Zero if n = 0; or 2 * (4^n - 1) / 3 if n > 0.
+ */
+template <unsigned n>
+struct minimum_t {
+    static const integer value = (minimum_t<n - 1>::value << 2) | 2;
+};
+
+template <>
+struct minimum_t<0> {
+    static const integer value = 0;
+};
+
+static integer constexpr min_max_size = minimum_t<max_half_size>::value;
+
+inline integer constexpr minimum(unsigned n) noexcept {
+  return min_max_size >> (max_half_size - n) >> (max_half_size - n);
+}
+
+/**
+ * @brief Get the maximum 2n-long Dyck word if n > 0 or zero if n = 0;
+ * 
+ * @pre   n <= max_half_size.
+ * 
+ * @param [in] n Zero or half size of the Dyck word.
+ * 
+ * @return 2^(2n) - 2^n.
+ */
+inline integer constexpr maximum(unsigned n) noexcept {
   return ((static_cast<integer>(1) << n) - 1) << n;
 }
 
-/**
- * @brief Get the minimum 2n-bits Dyck word, that is, 2 * (pow(4, n) - 1) / 3.
- * 
- * @pre   2n <= max_size.
- * 
- * @param [in] n Half size.
- * 
- * @return The minimum 2n-bits Dyck word.
- */
-CONSTEXPR14 inline integer minimum(unsigned n) noexcept {
-  assert(2 * n <= max_size && "n is too big!");
-  return minimum_of_max_size >> (max_size - 2 * n);
+#if defined(DYCK_POPCOUNT)
+
+inline unsigned constexpr popcount(integer c) {
+  return DYCK_POPCOUNT_FUNCTION(c);
 }
+
+inline unsigned constexpr ctz(integer c) {
+  return DYCK_CTZ_FUNCTION(c);
+}
+
+/**
+ * @brief Count the 1-bits in a number of the form 2^m - 2^n with m > n.
+ * 
+ * @pre   The given number is of the form 2^m - 2^n with m > n.
+ * 
+ * @param [in] c The number whose 1-bits we want to count.
+ * @param [in] a The number 2^n.
+ * 
+ * @return The number of 1-bits in c.
+ */
+inline unsigned constexpr get_count(integer c, integer a) {
+  #if defined(__POPCNT__) || !defined(__x86_64__)
+    return popcount(c);
+  #else
+    return ctz(c + a) - ctz(a);
+  #endif
+}
+
+#endif // DYCK_POPCOUNT
 
 /**
  * @brief Given a Dyck word w produces the next Dyck word of the same size.
@@ -94,13 +136,17 @@ CONSTEXPR14 inline integer minimum(unsigned n) noexcept {
  * 
  * @return The next Dyck word.
  */ 
-CONSTEXPR14 inline integer next(integer w) noexcept {
-  integer const a = w & -w;
-  integer const b = w + a;
+inline integer next(integer w) noexcept {
+  integer a = w & -w;
+  integer b = w + a;
   integer       c = w ^ b;
+  #if defined(DYCK_POPCOUNT)
+                c = minimum(get_count(c, a) - 2);
+  #else                
                 c = (c / a >> 2) + 1;
-                c = ((c * c - 1) & minimum_of_max_size) | b;
-  return c;
+                c = ((c * c - 1) & min_max_size);
+  #endif
+  return b | c;
 }
 
 /**
