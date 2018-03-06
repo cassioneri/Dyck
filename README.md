@@ -13,8 +13,7 @@ integer next_dyck_word(integer w) {
   return c;
 }
 ```
-
-The document [http://arxiv.org/abs/1602.06426](http://arxiv.org/abs/1602.06426) explains how this code works.
+The document [dyck.pdf](https://github.com/cassioneri/Dyck/blob/master/dyck.pdf) explains how this code works.
 Enjoy!
 
 Copyright (C) 2014 Cassio Neri Moreira
