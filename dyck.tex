@@ -55,13 +55,13 @@
   \footnote{First revision uploaded to \cite{Neri} on 22 Jul 2014 and current revision on 15 Feb 2018.}
 }
 
-\hypersetup{  
-  pdfinfo={  
-    Title={A loopless and branchless O(1) algorithm to generate the next Dyck word.},  
+\hypersetup{
+  pdfinfo={
+    Title={A loopless and branchless O(1) algorithm to generate the next Dyck word.},
     Author={Cassio Neri},
     Subject={Algorithm},
     Keywords={Dyck words, Balanced parentheses, Monotonic paths}
-  }  
+  }
 }
 
 
@@ -140,7 +140,7 @@ Show that $y$ can be computed from $x$ with a short chain of operations analogou
 \end{quote}
 \end{quote}
 Listing \ref{bitwise} is, basically, a solution for the exercise except that it reverses the interpretation of bits.
-Due to this reversal, the solution presented in \cite{Knuth} is differ from Listing \ref{bitwise} and uses a, potentially costly, \verb!sqrt! operation.
+Due to this reversal, the solution presented in \cite{Knuth} differs from Listing \ref{bitwise} and uses a potentially costly \verb!sqrt! operation.
 
 {\bf Update 2}: I also came across Warren \cite{Warren} which explains Gosper's hack and suggests the optimizations based on \verb!popcount! or \verb!ctz! that I have added to this article in February 2018.
 It also made me realize that Listing \ref{bitwise} is closer to Gosper's hack than I have initially thought.
@@ -320,7 +320,7 @@ The behaviour is undefined if \verb+w+ is not a Dyck word of \verb+one+s and \ve
 
 \begin{lstlisting}[float,caption={String manipulation to generate a Dyck word.},label=string]
 void next_dyck_word(std::string& w, char const one, char const zero) {
-  
+
   unsigned const m = w.size() - 1;
   unsigned       y = 0;
   unsigned       x = 0;
@@ -331,17 +331,17 @@ void next_dyck_word(std::string& w, char const one, char const zero) {
       ++y; // Counter for trailing 0s.
 
     else if (w[i - 1] == zero) {
-      
+
       // Found greatest i such that w[i] = zero and w[i + 1] = one.
-      
+
       // Change these two chars.
       w[i - 1] = one;
       w[  i  ] = zero;
-      
+
       // Overwrite the following next y - x chars to zero.
       for (y = y - x; y != 0; --y)
         w[++i] = zero;
-      
+
       // Overwrite the remaining chars with alternating ones and zeros.
       while (i < m) {
         w[++i] = one;
@@ -456,7 +456,7 @@ On these platforms the implementation above can be used.
 
 Older CPUs do not provide \verb!popcount! but implement a \verb!ctz! instruction to count the number of trailing 0s of a binary number.
 For the specifc bit pattern of \verb!c! we can use \verb!ctz! to work around the lack of \verb!popcount!.
-Indeed, recall that when we first set \verb!c! 
+Indeed, recall that when we first set \verb!c!
 \[
 \verb!c! = (2^{x + 2} - 1)\cdot 2^y = 2^{x + 2 + y} - 2^y = 2^{x + 2 + y} - \verb!a!.
 \]
